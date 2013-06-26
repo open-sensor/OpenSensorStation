@@ -4,30 +4,50 @@ include 'interface_tmote.php';
 $cliReader = new CliReader();
 $cliReader->readServerLocation();
 $cliReader->readSerialServer();
-$cliReader->encodeToJSON();
-//$cliReader->showSingleReading();
-$cliReader->showSingleJSONArray();
+$cliReader->encodeAndStoreToJSON();
+//$cliReader->displayCurrentReading();
 
 class CliReader
 {
 	private $_SerialServer;
 	private $_CommandServer;
+
 	private $_DateTime;
 	private $_Location;
 	private $_Temperature;
 	private $_Light;
 	private $_Humidity;
 	private $_Status;
-	private $_SingleJSONArray;
+
+	private $nonAssocArray;
+	private static $JSONFileLocation = "../data.json";
 
 	public function __construct() {
 		$this->_DateTime = date("d/m/Y h:i:s", time());
     	}
 
-	public function encodeToJSON() {
-		$reading[] = array( "date_time" => $this->_DateTime, "location" => $this->_Location, 
+	public function encodeAndStoreToJSON() {
+		// Create single data entry array.
+		$reading = array( "date_time" => $this->_DateTime, "location" => $this->_Location, 
 			"temperature" => $this->_Temperature, "light" => $this->_Light, "humidity" => $this->_Humidity );
-		$this->_SingleJSONArray = json_encode($reading);
+
+		// Read the persistent .json file, decode it into a PHP array, append the new array reading,
+		// encode the newly updated array into json format, and finally write the data back to the json file.
+		if(file_exists(self::$JSONFileLocation)) {
+			$allDataJSON = file_get_contents(self::$JSONFileLocation);
+			$allDataArray = json_decode($allDataJSON);
+			unset($allDataJSON); //prevent memory leaks for large json.
+
+			array_push($allDataArray, $reading);
+			$updatedDataJSON = json_encode($allDataArray);
+			file_put_contents(self::$JSONFileLocation, $updatedDataJSON);
+			echo $updatedDataJSON;
+		}
+		else { // Put the first array entry in the file.
+			$newAllDataArray = array ($reading);
+			$tempJSONData = json_encode($newAllDataArray);
+			file_put_contents(self::$JSONFileLocation, $tempJSONData);
+		}
 	}
 
 	public function readServerLocation() {
@@ -67,16 +87,12 @@ class CliReader
 		$this->_Humidity = trim($this->_Humidity);
 	}
 
-	public function showSingleReading() {
+	public function displayCurrentReading() {
 		echo "Date/Time: ".$this->_DateTime."\n\n";
 		echo "Location: ".$this->_Location."\n";
 		echo "Temperature (Celsius): ".$this->_Temperature."\n";
 		echo "Light (Lux): ".$this->_Light."\n";
 		echo "Humidity (%): ".$this->_Humidity."\n";
-	}
-
-	public function showSingleJSONArray() {
-		echo $this->_SingleJSONArray;
 	}
 }
 ?>
