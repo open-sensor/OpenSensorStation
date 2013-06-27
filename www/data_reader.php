@@ -35,15 +35,15 @@ class DataReader
 	// Read data from Serial Forwarder Server.
 	private function querySerialServer() {
 		$this->_SerialServer = new InterfaceSf();
-		$this->_Temperature = $this->_SerialServer->readSensor("temp");
-		$this->_Humidity = $this->_SerialServer->readSensor("humid");
-		$this->_Light = $this->_SerialServer->readSensor("light");
+		$this->_Temperature = $this->_SerialServer->queryServer("temp");
+		$this->_Humidity = $this->_SerialServer->queryServer("humid");
+		$this->_Light = $this->_SerialServer->queryServer("light");
 	}
 
 	private function queryServerLocation() {
 		// Read the mote's status from the command server.
 		$this->_CommandServer = new InterfaceCmd();
-		$this->_Status = $this->_CommandServer->readSensor("status");
+		$this->_Status = $this->_CommandServer->queryServer("status");
 
 		// The location needs to be extracted from the status output.
 		// Find the index position of the "Location:" line in the status output string.
