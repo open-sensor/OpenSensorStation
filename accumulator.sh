@@ -8,7 +8,7 @@ do
 	if [$availableSpace < 5]; then
 		rm data.json
 	else
-		php-cgi "www/data_reader.php"
+		php-cgi "www/aggregator.php"
 	fi
 	# sleep for 5 minutes
 	sleep 300

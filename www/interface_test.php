@@ -1,5 +1,5 @@
 <?php
-include 'data_interface/interface_tmote.php';
+include 'sensor_interface/interface_tmote.php';
 
 	$serverType = $_GET["srv"];
 	$command = $_GET["cmd"];
