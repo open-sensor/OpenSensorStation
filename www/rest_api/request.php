@@ -1,6 +1,6 @@
 <?php
 
-class RestRequest
+class Request
 {
 	private $request_vars;
 	private $data;
