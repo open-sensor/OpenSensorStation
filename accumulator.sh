@@ -6,9 +6,9 @@ do
 
 	# If the available space is less than 5MB
 	if [$availableSpace < 5]; then
-		rm data.json
+		php-cgi "www/aggregator/no_space"
 	else
-		php-cgi "www/aggregator.php"
+		php-cgi "www/aggregator"
 	fi
 	# sleep for 5 minutes
 	sleep 300

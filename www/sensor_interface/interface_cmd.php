@@ -8,7 +8,7 @@ class InterfaceCmd extends InterfaceTmote
 	protected static $SLCL;
 
 	public function __construct() {
-		$commandlist = array("help", "status", "set location");
+		$commandlist = array("status", "set location", "info");
         	parent::__construct("10001", $commandlist);
 		self::$SLCL = strlen("set location ");
     	}

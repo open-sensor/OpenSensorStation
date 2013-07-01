@@ -2,15 +2,40 @@
 include 'sensor_interface/interface_tmote.php';
 include 'data_storage.php';
 
+abstract class ServerType
+{
+	const SERIAL = 0;
+	const COMMAND = 1;
+}
+
 class DataReader
 {
 	private $_ValuesArray;
 
-	// Reads a single value from the serial forwarder server 
-	// given the value type (temp, humid, light).
-	public function readSingleValue($valueType) {
-		$serialServer = new InterfaceSf();
-		return $serialServer->queryServer($valueType);
+	// Reads a single value from the server specified.
+	public function getSingleValue($valueType, $srvType) {
+		if ($srvType == ServerType::SERIAL) {
+			$serialServer = new InterfaceSf();
+			return $serialServer->queryServer($valueType);
+		}
+		else if ($srvType == ServerType::COMMAND) {
+			$commandServer = new InterfaceCmd();
+			if($valueType == "location") {
+				return $this->queryServerLocation();
+			}
+			if($valueType == "date/time") {
+				return $this->queryServerDateTime();
+			}
+			return $commandServer->queryServer($valueType);
+		}
+		else {
+			echo "\n Error: Invalid server type specified.";
+		}
+	}
+	
+	// Gets all the stored data in JSON format.
+	public function getAllData() {
+		return DataStorage::getAllData();
 	}
 
 	// Public usable function, reading all the real-time values.
@@ -32,6 +57,12 @@ class DataReader
 	// Get date and time in an appropriate format.
 	private function queryServerDateTime() {
 		return date("d/m/Y h:i:s", time());
+	}
+
+	// Set the sensor's location.
+	public function setServerLocation($newlocation) {
+		$commandServer = new InterfaceCmd();
+		$commandServer->queryServer("set location ".$newlocation);
 	}
 
 	// Abstracts away the extraction of location from the status server reading.
@@ -66,9 +97,9 @@ class DataReader
 
 	// Stores the data persistently on the base-station 
 	// using a DataStorage object.
-	public function storeAllValues() {
+	public function storeAllValues($enoughSpace) {
 		$dataStorage = new DataStorage();
-		$dataStorage->storeData($this->_ValuesArray);
+		$dataStorage->storeData($this->_ValuesArray, $enoughSpace);
 	}
 }
 ?>
