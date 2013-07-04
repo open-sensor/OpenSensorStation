@@ -10,6 +10,7 @@ include 'sensor_interface/interface_tmote.php';
 	}
 	else if ($serverType == "sfServer") {
 		$serialForwarderServer = new InterfaceSf();
+		$serialForwarderServer->updateCommandList();
 		echo $serialForwarderServer->queryServer($command);
 	}
 	else if ($serverType == "") {

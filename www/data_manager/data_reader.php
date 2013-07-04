@@ -11,65 +11,70 @@ abstract class ServerType
 class DataReader
 {
 	private $_ValuesArray;
+	private $_SerialServer;
+	private $_CommandServer;
 
-	// Reads a single value from the server specified.
+	public function __construct() {
+		$this->_SerialServer = new InterfaceSf();
+		$this->_SerialServer->updateCommandList();
+
+		$this->_CommandServer = new InterfaceCmd();
+    	}
+
+	// Reads a single value from the server specified, acting as a single point of
+	// data reading from the REST-styled API. The value types can be any standard:
+	// 'location', 'set location *', 'date/time', 'status', or they can be from the
+	// list of available sensors, e.g.: 'humid', 'light', 'temp'.
 	public function getSingleValue($valueType, $srvType) {
 		if ($srvType == ServerType::SERIAL) {
-			$serialServer = new InterfaceSf();
-			return $serialServer->queryServer($valueType);
+			return $this->_SerialServer->queryServer($valueType);
 		}
 		else if ($srvType == ServerType::COMMAND) {
-			$commandServer = new InterfaceCmd();
 			if($valueType == "location") {
 				return $this->queryServerLocation();
 			}
-			if($valueType == "date/time") {
+			else if($valueType == "date/time") {
 				return $this->queryServerDateTime();
 			}
-			return $commandServer->queryServer($valueType);
+			else {
+				return $this->_CommandServer->queryServer($valueType);
+			}
 		}
 		else {
 			echo "\n Error: Invalid server type specified.";
 		}
 	}
-	
+
 	// Gets all the stored data in JSON format.
 	public function getAllData() {
 		return DataStorage::getAllData();
 	}
 
-	// Public usable function, reading all the real-time values.
+	// Used by the aggregator.php script to get real-time readings.
 	public function readAllValues() {
-		$serialServer = new InterfaceSf();
-		$temperature = $serialServer->queryServer("temp");
-		$humidity = $serialServer->queryServer("humid");
-		$light = $serialServer->queryServer("light");
-		$location = $this->queryServerLocation();
+		// Read contextual data (date/time and location).
 		$dateTime = $this->queryServerDateTime();
+		$location = $this->queryServerLocation();
+		$data = array("date_time" => $dateTime, "location" => $location);
 
-		// Create array with all data values.
-		$data = array( "date_time" => $dateTime, "location" => $location, 
-			"temperature" => $temperature, "light" => $light, "humidity" => $humidity );
-		$data = $this->trimData($data);
+		// Read actual data from all the available sensors.
+		$listOfCommands = $this->_SerialServer->getCommandList();
+		foreach ($listOfCommands as $command) {
+			$value = $this->_SerialServer->queryServer($command);
+			$data[$command] = $value;
+		}
 		$this->_ValuesArray = $data;
-	}
-
-	// Get date and time in an appropriate format.
-	private function queryServerDateTime() {
-		return date("d/m/Y h:i:s", time());
 	}
 
 	// Set the sensor's location.
 	public function setServerLocation($newlocation) {
-		$commandServer = new InterfaceCmd();
-		$commandServer->queryServer("set location ".$newlocation);
+		$this->_CommandServer->queryServer("set location ".$newlocation);
 	}
 
 	// Abstracts away the extraction of location from the status server reading.
 	private function queryServerLocation() {
 		// Read the mote's status from the command server.
-		$commandServer = new InterfaceCmd();
-		$status = $commandServer->queryServer("status");
+		$status = $this->_CommandServer->queryServer("status");
 
 		// The location needs to be extracted from the status output.
 		// Find the index position of the "Location:" line in the status output string.
@@ -85,14 +90,9 @@ class DataReader
 		return $location;
 	}
 
-	// Remove \r \n and other such characters.
-	private function trimData(array $data) {
-		$data["date_time"] = trim($data["date_time"]);
-		$data["location"] = trim($data["location"]);
-		$data["temperature"] = trim($data["temperature"]);
-		$data["light"] = trim($data["light"]);
-		$data["humidity"] = trim($data["humidity"]);
-		return $data;
+	// Get date and time in an appropriate format.
+	private function queryServerDateTime() {
+		return date("d-m-Y h:i:s", time());
 	}
 
 	// Stores the data persistently on the base-station 

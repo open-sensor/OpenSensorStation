@@ -25,13 +25,16 @@ abstract class InterfaceTmote
 			socket_write($socket, $command, strlen($command)) or die("\n From Client: Unable to send data to server \n");
 			$result = socket_read ($socket, 1024) or die("\n From client: Could not read response from server \n");
 			socket_close($socket);
-		//	$result = trim($result);
-		//	echo "\n Result Received: \n";
+			$result = trim($result);
 			return $result;
 		}
 	}
 
-	private function isValidCommand($command) {
+	public function getCommandList() {
+		return $this->_CommandList;
+	}
+
+	public function isValidCommand($command) {
 		// Check if the command field is empty.
 		if($command == "") {
 			echo "\n Error: No command specified. Available options include:";
@@ -47,7 +50,7 @@ abstract class InterfaceTmote
 		}
 
 		// Check if the command is issued to the "Command Server" and 
-		// starts with the string "set location " (which is valid). 
+		// starts with the string "set location " (which is valid).
 		if(get_called_class() == "InterfaceCmd") {
 			$setLocationCommandLength = InterfaceCmd::$SLCL;
 			$tempString = substr($command, 0, $setLocationCommandLength);
