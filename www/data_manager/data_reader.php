@@ -10,20 +10,25 @@ abstract class ServerType
 
 class DataReader
 {
-	private $_ValuesArray;
-	private $_SerialServer;
-	private $_CommandServer;
+	private $_ValuesArray = null;
+	private $_SerialServer = null;
+	private $_CommandServer = null;
+	private $_DataStorage = null;
 
-	public function __construct() {
+	function __construct() {
 		$this->_SerialServer = new InterfaceSf();
-		$this->_SerialServer->updateCommandList();
-
 		$this->_CommandServer = new InterfaceCmd();
+		$this->_DataStorage = new DataStorage();
     	}
+
+	// To be used by the REST-api for dynamic command recognition.
+	public function getSerialCommandList() {
+		return $this->_SerialServer->getCommandList();
+	}
 
 	// Reads a single value from the server specified, acting as a single point of
 	// data reading from the REST-styled API. The value types can be any standard:
-	// 'location', 'set location *', 'date/time', 'status', or they can be from the
+	// 'location', 'set location *', 'datetime', 'status', or they can be from the
 	// list of available sensors, e.g.: 'humid', 'light', 'temp'.
 	public function getSingleValue($valueType, $srvType) {
 		if ($srvType == ServerType::SERIAL) {
@@ -33,10 +38,10 @@ class DataReader
 			if($valueType == "location") {
 				return $this->queryServerLocation();
 			}
-			else if($valueType == "date/time") {
+			else if($valueType == "datetime") {
 				return $this->queryServerDateTime();
 			}
-			else {
+			else if ($valueType == "status"){
 				return $this->_CommandServer->queryServer($valueType);
 			}
 		}
@@ -47,7 +52,7 @@ class DataReader
 
 	// Gets all the stored data in JSON format.
 	public function getAllData() {
-		return DataStorage::getAllData();
+		return $this->_DataStorage->getAllData();
 	}
 
 	// Used by the aggregator.php script to get real-time readings.
@@ -55,12 +60,18 @@ class DataReader
 		// Read contextual data (date/time and location).
 		$dateTime = $this->queryServerDateTime();
 		$location = $this->queryServerLocation();
-		$data = array("date_time" => $dateTime, "location" => $location);
+		$data = array("datetime" => $dateTime, "location" => $location);
 
 		// Read actual data from all the available sensors.
 		$listOfCommands = $this->_SerialServer->getCommandList();
 		foreach ($listOfCommands as $command) {
 			$value = $this->_SerialServer->queryServer($command);
+			// Handling bug caused by unresolved memory leak.
+			if($value == "temp humid light") {
+				$value = "";
+			}
+			$value = trim($value);
+
 			$data[$command] = $value;
 		}
 		$this->_ValuesArray = $data;
@@ -98,8 +109,13 @@ class DataReader
 	// Stores the data persistently on the base-station 
 	// using a DataStorage object.
 	public function storeAllValues($enoughSpace) {
-		$dataStorage = new DataStorage();
-		$dataStorage->storeData($this->_ValuesArray, $enoughSpace);
+		$this->_DataStorage->storeData($this->_ValuesArray, $enoughSpace);
+	}
+
+	function __destruct() {
+		unset($this->_SerialServer);
+		unset($this->_CommandServer);
+		unset($this->_DataStorage);
 	}
 }
 ?>

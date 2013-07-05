@@ -4,12 +4,12 @@ include 'interface_cmd.php';
 
 abstract class InterfaceTmote
 {
-	protected static $CARRIAGE_AND_NEWLINE = "\r\n";
-	protected static $HOST="127.0.0.1";
-	protected $_Port;
-	protected $_CommandList;
+	protected $_Carriage_and_newline = "\r\n";
+	protected $_Host="127.0.0.1";
+	protected $_Port = null;
+	protected $_CommandList = null;
 
-	public function __construct($port, array $commandlist) {
+	function __construct($port, array $commandlist) {
 		$this->_Port = $port;
 		$this->_CommandList = $commandlist;
     	}
@@ -19,9 +19,9 @@ abstract class InterfaceTmote
 			return;
 		}
 		else {
-			$command = $command.self::$CARRIAGE_AND_NEWLINE;
+			$command = $command.$this->_Carriage_and_newline;
 			$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP) or die("\n From Client: Could not create socket \n");
-			$result = socket_connect($socket, self::$HOST, $this->_Port) or die("\n From Client: Unable to connect to server \n");
+			$result = socket_connect($socket, $this->_Host, $this->_Port) or die("\n From Client: Unable to connect to server \n");
 			socket_write($socket, $command, strlen($command)) or die("\n From Client: Unable to send data to server \n");
 			$result = socket_read ($socket, 1024) or die("\n From client: Could not read response from server \n");
 			socket_close($socket);
@@ -70,6 +70,10 @@ abstract class InterfaceTmote
 			echo " '".$this->_CommandList[$i]."' ";
 		}
 		echo "\n";
+	}
+
+	function __destruct() {
+		unset($this->_CommandList);
 	}
 }
 

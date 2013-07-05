@@ -3,106 +3,130 @@ include 'data_manager/data_reader.php';
 
 class APIController
 {
-	private static $Status = 200;
-	private static $Body = "";
-	private static $ContentType = "text/html";
+	private $_Status = 200;
+	private $_Body = "";
+	private $_ContentType = "text/html";
 
-	public static function handleRequest()
+	private $_DataReader = null;
+	private $_FirstVarList = array("data", "status", "location", "datetime");
+
+	function __construct() {
+		$this->_DataReader = new DataReader();
+    	}
+
+	// Check if the first variable is one of the valid/expected.
+	private function isFirstVarValid($var1) {
+		foreach ($this->_FirstVarList as $command) {
+			if($var1 == $command) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// Check if the second variable is one of the valid/expected.
+	private function isSecondVarValid($var2) {
+		$secondVarList = $this->_DataReader->getSerialCommandList();
+		$secondVarList[] = "";
+		foreach ($secondVarList as $command) {
+			if($var2 == $command) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// 
+	public function handleRequest()
 	{
 		$var1 = $_GET["var1"];
 		$var2 = $_GET["var2"];
 		$method = $_SERVER["REQUEST_METHOD"];
 		$accept = $_SERVER["HTTP_ACCEPT"];
 
-		if(!self::isFirstVarValid($var1)) {
-			self::$Status = 404;
+		// Check if the variables given in the form of URI are valid resources.
+		if(!$this->isFirstVarValid($var1)) {
+			$this->_Status = 404;
 			return;
 		}
-		
-		$dataReader = new DataReader();
+		if(!$this->isSecondVarValid($var2)) {
+			$this->_Status = 404;
+			return;
+		}
+
 		if($method == "GET") {
 			if ($var1 == "data") {
-				switch($var2)
-				{
-				case "temp":
-					self::$Body = $dataReader->getSingleValue("temp", ServerType::SERIAL);
-					break;
-				case "humid":
-					self::$Body = $dataReader->getSingleValue("humid", ServerType::SERIAL);
-					break;
-				case "light":
-					self::$Body = $dataReader->getSingleValue("light", ServerType::SERIAL);
-					break;
-				case "":
+				// If the second variable requested is empty, the client has requested all
+				// the stored data, which he must specify to be in JSON format.
+				if ($var2 == "") {
 					if($accept == "application/json") {
-						self::$Body = $dataReader->getAllData();
+						$this->_Body = $this->_DataReader->getAllData();
 					}
 					else {
-						self::$Status = 406;
+						$this->_Status = 406;
 					}
-					break;
-				default:
-					self::$Status = 404;
+				}
+				else {
+					$this->_Body = $this->_DataReader->getSingleValue($var2, ServerType::SERIAL);
 				}
 			}
-			else if ($var1 == "location" && $var2 == "") {
-				self::$Body = $dataReader->getSingleValue("location", ServerType::COMMAND);
-			}
-			else if($var1 == "status" && $var2 == "") {
-				self::$Body = $dataReader->getSingleValue("status", ServerType::COMMAND);
-			}
-			else if($var1 == "info" && $var2 == "") {
-				self::$Status = 501;
-				// To-be-implemented: get info about available sensors.
-			}
-			else {
-				self::$Status = 404;
+			else {	// If the client did not request sensor-type data, we must make sure that the
+				// second variable is empty.
+				if($var2 == "") {
+					$this->_Body = $this->_DataReader->getSingleValue($var1, ServerType::COMMAND);
+				}
+				else {
+					$this->_Status = 404;
+				}
 			}
 		}
 		else if ($method == "PUT") {
+			// The only acceptable HTTP PUT request is for updating the location.
 			if ($var1 == "location" && $var2 == "") {
 				$locationString = file_get_contents('php://input');
-				$dataReader->setServerLocation($locationString);
+				$this->_DataReader->setServerLocation($locationString);
 			}
 			else {
-				self::$Status = 404;
+				$this->_Status = 405;
 			}
 		}
 		else {
-			self::$Status = 405;
+			$this->_Status = 405;
+		}
+
+		// If the request was correct but the server did not return data,
+		// we must notify the client that the service is unavailable.
+		if($this->_Status == 200 && $this->_Body == "") {
+			$this->_Status = 503;
+		}
+
+		// Handling bug caused by unresolved memory leak.
+		if($this->_Body == "temp humid light") {
+			$this->_Body = "";
+			$this->_Status = 503;
 		}
 	}
 
-	// Check if the first variable is one of the valid/expected.
-	private static function isFirstVarValid($var1) {
-		$varList = array("data", "status", "location", "info");
-		$isFirstVarValid = false;
-		for ($i = 0 ; $i < count($varList) ; $i++) {
-			if($var1 == $varList[$i]) {
-				$isFirstVarValid = true;
-			}
-		}
-		return $isFirstVarValid;
-	}
 
-	public static function sendResponse()
+	// 
+	public function sendResponse()
 	{
-		$status_header = "HTTP/1.1 " . self::$Status . " " . self::getStatusCodeMessage(self::$Status);
+		$status_header = "HTTP/1.1 " . $this->_Status . " " . $this->getStatusCodeMsg($this->_Status);
 		// set the status
 		header($status_header);
 		// set the content type
-		header("Content-type: " . self::$ContentType);
+		header("Content-type: " . $this->_ContentType);
 
 		// pages with body are easy
-		if(self::$Body != "") {
+		if($this->_Body != "") {
 			// send the body
-			echo self::$Body;
+			echo $this->_Body;
 			exit;
 		}
 		// we need to create the body if none is passed
 		else {
 			$msg ="";
-			switch (self::$Status)
+			switch ($this->_Status)
 			{
 			case 404:
 				$msg = "The requested resource does not exist.";
@@ -111,29 +135,29 @@ class APIController
 				$msg = "The requested method is not allowed.";
 				break;
 			case 406:
-				$msg = "Accepting only 'application/json' media type for this resource.";
+				$msg = "Accepting only 'application/json' MIME type for this resource.";
 				break;
-			case 501:
-				$msg = "The requested service is not implemented yet.";
+			case 503:
+				$msg = "The sensor station is unavailable at this time.";
 				break;
 			}
-			self::$Body = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+			$this->_Body = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 				    <html>
 					<head>
 					    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-					    <title>' . self::$Status . ' ' . self::getStatusCodeMessage(self::$Status) . '</title>
+					    <title>' . $this->_Status . ' ' . $this->getStatusCodeMsg($this->_Status) . '</title>
 					</head>
 					<body>
-					    <h1>' . self::getStatusCodeMessage(self::$Status) . '</h1>
+					    <h1>' . $this->getStatusCodeMsg($this->_Status) . '</h1>
 					    <p>' . $msg . '</p>
 					</body>
 				    </html>';
-			echo self::$Body;
+			echo $this->_Body;
 			exit;
 		}
 	}
 
-	private static function getStatusCodeMessage($status)
+	private function getStatusCodeMsg($status)
 	{
 		$codes = Array(
 		    200 => 'OK',
@@ -146,6 +170,10 @@ class APIController
 		);
 		return (isset($codes[$status])) ? $codes[$status] : '';
 	}
+
+	function __destruct() {
+		unset($this->_DataReader);
+    	}
 }
 
 ?>
