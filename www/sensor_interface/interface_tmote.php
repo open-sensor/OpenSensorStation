@@ -14,6 +14,12 @@ abstract class InterfaceTmote
 		$this->_CommandList = $commandlist;
     	}
 
+	protected function updateCommandList() {
+		$listString = $this->queryServer("sensorlist");
+		$updatedList = explode(" ", $listString);
+		$this->_CommandList = $updatedList;
+	}
+
 	public function queryServer($command) {
 		if(!$this->isValidCommand($command)) {
 			return;
@@ -26,6 +32,8 @@ abstract class InterfaceTmote
 			$result = socket_read ($socket, 1024) or die("\n From client: Could not read response from server \n");
 			socket_close($socket);
 			$result = trim($result);
+			usleep(100000); // Important to sleep between requests or else the
+					// base-station and mote will not be able to handle it.
 			return $result;
 		}
 	}

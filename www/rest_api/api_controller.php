@@ -101,10 +101,10 @@ class APIController
 		}
 
 		// Handling bug caused by unresolved memory leak.
-		if($this->_Body == "temp humid light") {
+	/*	if($this->_Body == "temp humid light") {
 			$this->_Body = "";
 			$this->_Status = 503;
-		}
+		} */
 	}
 
 

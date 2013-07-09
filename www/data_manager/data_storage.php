@@ -15,17 +15,19 @@ class DataStorage
 			// We're out of disk space, remove the first data entry from the 
 			// stored JSON file, so that we can add a new one at the end.
 			if($enoughSpace == 0) {
-				array_shift($allDataArray);	
+				array_shift($allDataArray);
 			}
 			array_push($allDataArray, $valuesArray);
 			$updatedDataJSON = json_encode($allDataArray);
 			file_put_contents($this->JSONFileLocation, $updatedDataJSON);
-			echo $updatedDataJSON;
+			echo json_encode($valuesArray);
 		}
 		else { // Put the first array entry in the file.
 			$newAllDataArray = array ($valuesArray);
 			$tempJSONData = json_encode($newAllDataArray);
 			file_put_contents($this->JSONFileLocation, $tempJSONData);
+			echo "Created new storage file...\n";
+			echo "Started toring newly gathered data...";
 		}
 	}
 
@@ -34,6 +36,15 @@ class DataStorage
 		if(file_exists($this->JSONFileLocation)) {
 			$allDataJSON = file_get_contents($this->JSONFileLocation);
 			return $allDataJSON;
+		}
+		else {
+			echo "\n Error: Data file does not exist.";
+		}
+	}
+
+	public function deleteAllData() {
+		if(file_exists($this->JSONFileLocation)) {
+			
 		}
 		else {
 			echo "\n Error: Data file does not exist.";

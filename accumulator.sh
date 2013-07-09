@@ -6,10 +6,10 @@ do
 
 	# If the available space is less than 5MB
 	if [$availableSpace < 5]; then
-		php-cgi www/aggregator.php enoughSpace=0
+		php-fcgi www/aggregator.php enoughSpace=0
 	else
-		php-cgi www/aggregator.php enoughSpace=1
+		php-fcgi www/aggregator.php enoughSpace=1
 	fi
 	# sleep for 10 minutes
-	sleep 600
+	sleep 2
 done

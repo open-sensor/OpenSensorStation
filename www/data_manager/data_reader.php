@@ -26,28 +26,46 @@ class DataReader
 		return $this->_SerialServer->getCommandList();
 	}
 
+	private function isAggregatorRequestRunning() {
+		return exec("ps | grep php-fcgi | grep -v grep | wc -l");
+	}
+
 	// Reads a single value from the server specified, acting as a single point of
 	// data reading from the REST-styled API. The value types can be any standard:
 	// 'location', 'set location *', 'datetime', 'status', or they can be from the
 	// list of available sensors, e.g.: 'humid', 'light', 'temp'.
 	public function getSingleValue($valueType, $srvType) {
+		while($this->isAggregatorRequestRunning()) {
+			// do nothing...
+		}
+
 		if ($srvType == ServerType::SERIAL) {
+			while($this->isAggregatorRequestRunning()) {
+				// do nothing...
+			}
 			return $this->_SerialServer->queryServer($valueType);
 		}
 		else if ($srvType == ServerType::COMMAND) {
 			if($valueType == "location") {
+				while($this->isAggregatorRequestRunning()) {
+					// do nothing...
+				}
 				return $this->queryServerLocation();
 			}
 			else if($valueType == "datetime") {
 				return $this->queryServerDateTime();
 			}
 			else if ($valueType == "status"){
+				while($this->isAggregatorRequestRunning()) {
+					// do nothing...
+				}
 				return $this->_CommandServer->queryServer($valueType);
 			}
 		}
 		else {
 			echo "\n Error: Invalid server type specified.";
 		}
+		
 	}
 
 	// Gets all the stored data in JSON format.
@@ -66,12 +84,6 @@ class DataReader
 		$listOfCommands = $this->_SerialServer->getCommandList();
 		foreach ($listOfCommands as $command) {
 			$value = $this->_SerialServer->queryServer($command);
-			// Handling bug caused by unresolved memory leak.
-			if($value == "temp humid light") {
-				$value = "";
-			}
-			$value = trim($value);
-
 			$data[$command] = $value;
 		}
 		$this->_ValuesArray = $data;
