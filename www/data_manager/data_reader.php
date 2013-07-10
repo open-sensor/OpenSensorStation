@@ -76,6 +76,11 @@ class DataReader
 		return $this->_DataStorage->getAllData();
 	}
 
+	// Deletes the all the persistently stored data in JSON format.
+	public function deleteAllData() {
+		$this->_DataStorage->deleteAllData();
+	}
+
 	// Set the sensor's location.
 	public function setServerLocation($newlocation) {
 		$this->_CommandServer->queryServer("set location ".$newlocation);

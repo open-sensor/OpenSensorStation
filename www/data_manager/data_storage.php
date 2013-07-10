@@ -45,6 +45,16 @@ class DataStorage
 		}
 	}
 
+	// Delete the file with all the persistently stored data in JSON format.
+	public function deleteAllData() {
+		if(file_exists($this->JSONFileLocation)) {
+			unlink($this->JSONFileLocation);
+		}
+		else {
+			echo "\n Error: Data file does not exist.";
+		}
+	}
+
 	// Get the name of the file that stores the data.
 	public function getJSONFileName() {
 		if(file_exists($this->JSONFileLocation)) {

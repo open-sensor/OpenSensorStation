@@ -70,6 +70,9 @@ class APIController
 				if ($var2 == "") {
 					if($accept == "application/json") {
 						$this->_Body = $this->_DataReader->getAllData();
+						// We also need to delete the persistent storage file to free
+						// the limited disk space for data storage aggregation.
+						$this->_DataReader->deleteAllData();
 					}
 					else {
 						$this->_Status = 406;
