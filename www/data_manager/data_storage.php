@@ -1,11 +1,14 @@
 <?php
-	
+
+/*Responsible for access and handling of data persistent storage,
+including storing new data and retrieving all the available data. */
 class DataStorage
 {
 	private $JSONFileLocation = "../data.json";
 
-	// Encodes the data reading into JSON format and appends it to the 
-	// rest of the data stored persistently in a JSON file.
+	/*Decodes the json data read from the file on the disk, pushes the newly read
+	value at the end of the object array, encodes the updated array into json,
+	and finally overwrites the file with the updated json-formatted data. */
 	public function storeData(array $valuesArray, $enoughSpace) {
 		if(file_exists($this->JSONFileLocation)) {
 			$allDataJSON = file_get_contents($this->JSONFileLocation);
@@ -31,7 +34,7 @@ class DataStorage
 		}
 	}
 
-	// Get stored data in JSON format.
+	// Get all the persistently stored data in JSON format.
 	public function getAllData() {
 		if(file_exists($this->JSONFileLocation)) {
 			$allDataJSON = file_get_contents($this->JSONFileLocation);
@@ -42,16 +45,7 @@ class DataStorage
 		}
 	}
 
-	public function deleteAllData() {
-		if(file_exists($this->JSONFileLocation)) {
-			
-		}
-		else {
-			echo "\n Error: Data file does not exist.";
-		}
-	}
-
-	// Get the file name that stores the data.
+	// Get the name of the file that stores the data.
 	public function getJSONFileName() {
 		if(file_exists($this->JSONFileLocation)) {
 			return $this->JSONFileLocation;

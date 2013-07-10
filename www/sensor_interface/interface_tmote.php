@@ -2,6 +2,11 @@
 include 'interface_sf.php';
 include 'interface_cmd.php';
 
+/* This class is responsible for socket-based access to the services that provide communication with
+the sensor device. It serves as a communication interface/abstraction layer for performing a single 
+request to the sensor device and receiving its response. It is abstract, and the functionality is
+used by the instantiations of its 2 subclasses, each of which represent the 2 services for accessing
+mote data and other information respectively. */
 abstract class InterfaceTmote
 {
 	protected $_Carriage_and_newline = "\r\n";
@@ -9,17 +14,17 @@ abstract class InterfaceTmote
 	protected $_Port = null;
 	protected $_CommandList = null;
 
+	// Depending on the type of service we need access to, different port and
+	// list of commands is passed to the constructor.
 	function __construct($port, array $commandlist) {
 		$this->_Port = $port;
 		$this->_CommandList = $commandlist;
     	}
 
-	protected function updateCommandList() {
-		$listString = $this->queryServer("sensorlist");
-		$updatedList = explode(" ", $listString);
-		$this->_CommandList = $updatedList;
-	}
-
+	/*Provides the core functionality of the class, a single socket connection for a single request,
+	and returning the result. Note that the waiting(usleep()) after closing the socket is used as
+	a safeguard between possible repeated requests, since the base station and sensor device will 
+	not be able to handle them. */
 	public function queryServer($command) {
 		if(!$this->isValidCommand($command)) {
 			return;
@@ -42,6 +47,7 @@ abstract class InterfaceTmote
 		return $this->_CommandList;
 	}
 
+	// Validates the command passed for request.
 	public function isValidCommand($command) {
 		// Check if the command field is empty.
 		if($command == "") {

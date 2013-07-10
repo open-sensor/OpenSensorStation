@@ -1,6 +1,10 @@
 <?php
 include 'data_manager/data_reader.php';
 
+/* This class is responsible for handling all the HTTP requests to the server at large,
+validating them, performing the appropriate actions by using a DataReader object, and 
+finally forming and sending appropriate HTTP responses back to the client. 
+It validates the REST-styled URI of requests, as described by the appropriate URI list specification. */
 class APIController
 {
 	private $_Status = 200;
@@ -14,7 +18,8 @@ class APIController
 		$this->_DataReader = new DataReader();
     	}
 
-	// Check if the first variable is one of the valid/expected.
+	// Check if the first variable is one of the valid/expected, as described in the
+	// appropriate URI list specification.
 	private function isFirstVarValid($var1) {
 		foreach ($this->_FirstVarList as $command) {
 			if($var1 == $command) {
@@ -24,7 +29,8 @@ class APIController
 		return false;
 	}
 
-	// Check if the second variable is one of the valid/expected.
+	// Check if the second variable is one of the valid/expected, as described in the
+	// appropriate URI list specification.
 	private function isSecondVarValid($var2) {
 		$secondVarList = $this->_DataReader->getSerialCommandList();
 		$secondVarList[] = "";
@@ -36,7 +42,10 @@ class APIController
 		return false;
 	}
 
-	// 
+	/* The main function responsible for handling the HTTP request. It checks the HTTP request method, 
+	and the GET variables passed over, in order to identify the status of the upcoming reponse,
+	and form the response's body (based on data retrieved by the DataReader object, or appropriate 
+	error message in the case of invalid request.) */
 	public function handleRequest()
 	{
 		$var1 = $_GET["var1"];
@@ -70,8 +79,8 @@ class APIController
 					$this->_Body = $this->_DataReader->getSingleValue($var2, ServerType::SERIAL);
 				}
 			}
-			else {	// If the client did not request sensor-type data, we must make sure that the
-				// second variable is empty.
+			else {	// If the client did not request sensor-reading data, we must make sure
+				// that the second variable is empty.
 				if($var2 == "") {
 					$this->_Body = $this->_DataReader->getSingleValue($var1, ServerType::COMMAND);
 				}
@@ -94,21 +103,24 @@ class APIController
 			$this->_Status = 405;
 		}
 
-		// If the request was correct but the server did not return data,
+		// If a GET request was correct but the server did not return data,
 		// we must notify the client that the service is unavailable.
-		if($this->_Status == 200 && $this->_Body == "") {
+		if($method == "GET" && $this->_Status == 200 && $this->_Body == "") {
 			$this->_Status = 503;
 		}
 
-		// Handling bug caused by unresolved memory leak.
-	/*	if($this->_Body == "temp humid light") {
+		// Handling bug caused when the aggregator script is performing 
+		// sensor requests at the same time this rest-api request is being handled.
+		if($this->_Body == "temp humid light") {
 			$this->_Body = "";
 			$this->_Status = 503;
-		} */
+		}
 	}
 
 
-	// 
+	// Sets up and sends the reponse headers and body based on the results of the 
+	// handleRequest() method. Status codes are translated into user-friendly messages to
+	// inform the client what went wrong in detail.
 	public function sendResponse()
 	{
 		$status_header = "HTTP/1.1 " . $this->_Status . " " . $this->getStatusCodeMsg($this->_Status);
@@ -117,13 +129,12 @@ class APIController
 		// set the content type
 		header("Content-type: " . $this->_ContentType);
 
-		// pages with body are easy
+		// If we have a body already, it means that data is being passed.
 		if($this->_Body != "") {
-			// send the body
 			echo $this->_Body;
 			exit;
 		}
-		// we need to create the body if none is passed
+		// We create an HTML body if none is passed, and set the appropriate error message.
 		else {
 			$msg ="";
 			switch ($this->_Status)
@@ -157,6 +168,7 @@ class APIController
 		}
 	}
 
+	// Utility method for interpreting HTTP response status codes into their meanings.
 	private function getStatusCodeMsg($status)
 	{
 		$codes = Array(

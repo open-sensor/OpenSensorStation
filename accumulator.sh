@@ -11,5 +11,5 @@ do
 		php-fcgi www/aggregator.php enoughSpace=1
 	fi
 	# sleep for 10 minutes
-	sleep 2
+	sleep 600
 done
