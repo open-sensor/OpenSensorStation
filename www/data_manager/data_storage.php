@@ -34,6 +34,13 @@ class DataStorage
 		}
 	}
 
+	public function fileExists() {
+		if(file_exists($this->JSONFileLocation)) {
+			return true;
+		}
+		return false;
+	}
+
 	// Get all the persistently stored data in JSON format.
 	public function getAllData() {
 		if(file_exists($this->JSONFileLocation)) {

@@ -12,7 +12,7 @@ class APIController
 	private $_ContentType = "text/html";
 
 	private $_DataReader = null;
-	private $_FirstVarList = array("data", "status", "location", "datetime");
+	private $_FirstVarList = array("data", "status", "location", "datetime", "sensorlist");
 
 	function __construct() {
 		$this->_DataReader = new DataReader();
@@ -69,10 +69,16 @@ class APIController
 				// the stored data, which he must specify to be in JSON format.
 				if ($var2 == "") {
 					if($accept == "application/json") {
-						$this->_Body = $this->_DataReader->getAllData();
-						// We also need to delete the persistent storage file to free
-						// the limited disk space for data storage aggregation.
-						$this->_DataReader->deleteAllData();
+						if($this->_DataReader->getDataStorage()->fileExists()) {
+							$this->_Body = $this->_DataReader->getAllData();
+							$this->_ContentType = "application/json";
+							// We also need to delete the persistent storage file to free
+							// the limited disk space for data storage aggregation.
+							$this->_DataReader->deleteAllData();
+						}
+						else {
+							$this->_Status = 204;
+						}
 					}
 					else {
 						$this->_Status = 406;
@@ -85,7 +91,18 @@ class APIController
 			else {	// If the client did not request sensor-reading data, we must make sure
 				// that the second variable is empty.
 				if($var2 == "") {
-					$this->_Body = $this->_DataReader->getSingleValue($var1, ServerType::COMMAND);
+					if($var1 == "sensorlist") {
+						if($accept == "application/json") {
+							$this->_Body = $this->_DataReader->getSensorList();
+							$this->_ContentType = "application/json";
+						}
+						else {
+							$this->_Status = 406;
+						}
+					}
+					else {
+						$this->_Body = $this->_DataReader->getSingleValue($var1, ServerType::COMMAND);
+					}
 				}
 				else {
 					$this->_Status = 404;
@@ -135,10 +152,13 @@ class APIController
 		// If we have a body already, it means that data is being passed.
 		if($this->_Body != "") {
 			echo $this->_Body;
-			exit;
+			return;
 		}
 		// We create an HTML body if none is passed, and set the appropriate error message.
 		else {
+			if($this->_Status == 204) {
+				return;
+			}
 			$msg ="";
 			switch ($this->_Status)
 			{
@@ -167,7 +187,7 @@ class APIController
 					</body>
 				    </html>';
 			echo $this->_Body;
-			exit;
+			return;
 		}
 	}
 
@@ -176,6 +196,7 @@ class APIController
 	{
 		$codes = Array(
 		    200 => 'OK',
+		    204 => 'No Content',
 		    404 => 'Not Found',
 		    405 => 'Method Not Allowed',
 		    406 => 'Not Acceptable',

@@ -30,6 +30,10 @@ class DataReader
 		return $this->_SerialServer->getCommandList();
 	}
 
+	public function getSensorList() {
+		return json_encode($this->_SerialServer->getCommandList());
+	}
+
 	/* Reads a single value from the server specified, acting as a single point of
 	data reading from the REST-styled API. The value types can be standard:
 	'location', 'set location *', 'datetime', 'status', or they can be from the
@@ -113,6 +117,10 @@ class DataReader
 	// Stores the data persistently on the base-station using a DataStorage object.
 	public function storeAllValues($enoughSpace) {
 		$this->_DataStorage->storeData($this->_ValuesArray, $enoughSpace);
+	}
+
+	public function getDataStorage() {
+		return $this->_DataStorage;
 	}
 
 	function __destruct() {
