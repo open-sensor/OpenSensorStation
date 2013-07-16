@@ -23,6 +23,8 @@ class DataReader
 		$this->_SerialServer = new InterfaceSf();
 		$this->_CommandServer = new InterfaceCmd();
 		$this->_DataStorage = new DataStorage();
+
+		$this->_SerialServer->readSensorList();
     	}
 
 	// Is used by the REST-api for dynamic command recognition.
