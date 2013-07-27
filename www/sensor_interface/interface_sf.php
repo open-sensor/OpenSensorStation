@@ -1,4 +1,5 @@
 <?php
+include 'sensor_dictionary.php';
 
 /*This class is used to instantiate the communication abstraction layer for the
 serial forwarder service running on the base-station, and in extent the sensor itself
@@ -21,10 +22,25 @@ class InterfaceSf extends InterfaceTmote
 		if(file_exists($this->sensorListFileLocation)) {
 			$sensorListString = file_get_contents($this->sensorListFileLocation);
 			$updatedList = explode(" ", $sensorListString);
+			
+			// Perform the validation (again)...
+			$sensorDictionary = new SensorDictionary();
+			$isListValid = $sensorDictionary->isSensorListValid($updatedList);
+			usleep(50000);
+			
+			if($isListValid == false) {
+				unlink($sensorListFileLocation);
+				$this->updateCommandList();
+			}
 			$this->_CommandList = $updatedList;
 		}
 		else {
 			$this->updateCommandList();
+			
+			$currentDatetime = date('m/d/Y h:i:s a');
+			$info = ' - Calling readSensorList() recursively...\n';
+			file_put_contents('../../recursion.log', $currentDatetime.$info, FILE_APPEND);
+			
 			$this->readSensorList(); // Recursion until there is a valid sensorlist.conf
 						// to update the list from.
 		}
@@ -37,17 +53,15 @@ class InterfaceSf extends InterfaceTmote
 	public function updateCommandList() {
 		$invalidList = false;
 		do {
-			$invalidList = false;
 			$listString = $this->queryServer("sensorlist");
 			$updatedList = explode(" ", $listString);
-			for($i=0 ; $i<sizeof($updatedList) ; $i++) {
-				if($updatedList[$i] == "" || $updatedList[$i] == null) {
-					$invalidList = true;
-				}
-			}
+			// Perform the validation...
+			$sensorDictionary = new SensorDictionary();
+			$isListValid = $sensorDictionary->isSensorListValid($updatedList);
 			usleep(50000);
-		} while($invalidList == true);
+		} while($isListValid == false);
 		file_put_contents($this->sensorListFileLocation, $listString);
+		unset($sensorDictionary);
 	}
 
 	function __destruct() {
