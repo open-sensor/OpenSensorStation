@@ -16,5 +16,5 @@ do
 	fi
 	
 	# sleep for 10 minutes
-	sleep 600
+	sleep 595
 done
