@@ -5,14 +5,14 @@ do
 	availableSpace= df -m /dev/sda1 | sed -n 2p | awk '{print $4}'
 	
 	# update the sensor list
-	php-fcgi www/sensorlist_updater.php
+	php-fcgi /srv/www/sensorlist_updater.php
 	sleep 5
 
 	# If the available space is less than 5MB
 	if [$availableSpace < 5]; then
-		php-fcgi www/aggregator.php enoughSpace=0
+		php-fcgi /srv/www/aggregator.php enoughSpace=0
 	else
-		php-fcgi www/aggregator.php enoughSpace=1
+		php-fcgi /srv/www/aggregator.php enoughSpace=1
 	fi
 	
 	# sleep for 10 minutes
