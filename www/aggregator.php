@@ -2,9 +2,11 @@
 include 'data_manager/data_reader.php';
 
 /*
-This php script is used by the accumulator.sh shell script for 
-performing requests to all the available sensors, gathering contextual data,
-structuring them appropriatelly and storing them persistently.
+* This php script is used by the accumulator.sh shell script for 
+* performing requests to all the available sensors, gathering contextual data,
+* structuring them appropriatelly and storing them persistently, by using a
+* DataReader object.
+* author: Nikos Moumoulidis
 */
 
 $enoughSpace = $_GET["enoughSpace"];

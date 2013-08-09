@@ -2,11 +2,14 @@
 include 'interface_sf.php';
 include 'interface_cmd.php';
 
-/* This class is responsible for socket-based access to the services that provide communication with
-the sensor device. It serves as a communication interface/abstraction layer for performing a single 
-request to the sensor device and receiving its response. It is abstract, and the functionality is
-used by the instantiations of its 2 subclasses, each of which represent the 2 services for accessing
-mote data and other information respectively. */
+/**
+* This class is responsible for socket-based access to the services that provide communication with
+* the sensor device. It serves as a communication interface/abstraction layer for performing a single 
+* request to the sensor device and receiving its response. It is abstract, and the functionality is
+* used by the instantiations of its 2 subclasses, each of which represent the 2 services for accessing
+* mote data and other information respectively. 
+* author: Nikos Moumoulidis
+*/
 abstract class InterfaceTmote
 {
 	protected $_Carriage_and_newline = "\r\n";

@@ -2,9 +2,11 @@
 include 'data_manager/data_reader.php';
 
 /* This class is responsible for handling all the HTTP requests to the server at large,
-validating them, performing the appropriate actions by using a DataReader object, and 
-finally forming and sending appropriate HTTP responses back to the client. 
-It validates the REST-styled URI of requests, as described by the appropriate URI list specification. */
+* validating them, performing the appropriate actions by using a DataReader object, and 
+* finally forming and sending appropriate HTTP responses back to the client. 
+* It validates the REST-styled URI of requests, as described by the appropriate URI list specification. 
+* author: Nikos Moumoulidis
+*/
 class APIController
 {
 	private $_Status = 200;

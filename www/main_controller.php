@@ -2,10 +2,14 @@
 include 'rest_api/api_controller.php';
 
 /* All HTTP requests are directed to this script by the web server.
-It handles the HTTP request using an APIController object. */
+* It handles the HTTP request using an APIController object. 
+* author: Nikos Moumoulidis
+*/
 
 /* If the aggregator is running at the moment, wait 5
-seconds for it to finish before handling the request. */
+seconds for it to finish before handling the request. 
+Effectively implements a half-mutex.
+*/
 while(isAggregatorRequestRunning()) {
 	sleep(5);
 }

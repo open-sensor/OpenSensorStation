@@ -1,14 +1,23 @@
 <?php
 
 /*Responsible for access and handling of data persistent storage,
-including storing new data and retrieving all the available data. */
+* including storing new data and retrieving all the available data. 
+* author: Nikos Moumoulidis
+*/
 class DataStorage
 {
 	private $JSONFileLocation = "../data.json";
 
-	/*Decodes the json data read from the file on the disk, pushes the newly read
-	value at the end of the object array, encodes the updated array into json,
-	and finally overwrites the file with the updated json-formatted data. */
+	/* Implements a good-enough efficiency algorithm for parsing through the JSON persistent storage
+	* file and perform I/O operations on it. Takes into account paremeters such as: 
+	* - does the file already exist or not.
+	* - is there enough space on the disk or not (and recycle data if not).
+	* while also performing JSON validation upon encoding/decoding it from/to PHP data structures,
+	* using the '@' prefix to suppress errors/warnings and check on the validity of the encoding/decoding
+	* operation. Invalid json objects within the just-read file data are removed as soon as found, and 
+	* invalid just-encoded json objects are not inserted as soon as found, resulting in robust data 
+	* validation.
+	*/
 	public function storeData(array $valuesArray, $enoughSpace) {
 
 		// **************************************** The file exists ****************************************

@@ -1,10 +1,14 @@
 <?php
 include 'sensor_dictionary.php';
 
-/*This class is used to instantiate the communication abstraction layer for the
-serial forwarder service running on the base-station, and in extent the sensor itself
-for gathering data. It is initially agnostic of the mote's available sensors, and 
-performs an update request upon its construction. */
+/**
+* This class is used to instantiate the communication abstraction layer for the
+* serial forwarder service running on the base-station, and in extent the sensor itself
+* for gathering data. It is initially agnostic of the mote's available sensors, and 
+* performs an update request upon its construction. 
+* Also provides multiple-level validation of sensorlist.
+* author: Nikos Moumoulidis
+*/
 class InterfaceSf extends InterfaceTmote
 {
 	private $sensorListFileLocation = "../sensorlist.conf";
@@ -29,7 +33,9 @@ class InterfaceSf extends InterfaceTmote
 			usleep(50000);
 			
 			if($isListValid == false) {
-				unlink($sensorListFileLocation);
+				if(file_exists($sensorListFileLocation)) {
+					unlink($sensorListFileLocation);
+				}
 				$this->updateCommandList();
 			}
 			$this->_CommandList = $updatedList;

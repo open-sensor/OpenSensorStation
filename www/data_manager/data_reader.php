@@ -10,8 +10,11 @@ abstract class ServerType
 }
 
 /* This class is used by the aggregation script, and the REST-styled api respectively, 
-providing them data access and management in a structured way, abstracting away the data 
-communication and storage details performed by the server interface and data storage classes. */
+* providing them data access and management in a structured way, abstracting away the data 
+* communication and storage details performed by the server interface and data storage classes. 
+* Forms the middle-layer of the layered architecture.
+* author: Nikos Moumoulidis
+*/
 class DataReader
 {
 	private $_ValuesArray = null;

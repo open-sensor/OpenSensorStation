@@ -1,8 +1,11 @@
 <?php
 
-/*This class is used to instantiate the communication abstraction layer for the
-command service running on the base-station, which is used for accessing contextual 
-information, like the device's status, location, and also setting(updating) its location. */
+/**
+* This class is used to instantiate the communication abstraction layer for the
+* command service running on the base-station, which is used for accessing contextual 
+* information, like the device's status, location, and also setting(updating) its location. 
+* author: Nikos Moumoulidis
+*/
 class InterfaceCmd extends InterfaceTmote
 {
 	// Set Location Command Length (SLCL) to be used for identifying the use 
